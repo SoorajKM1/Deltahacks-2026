@@ -42,7 +42,11 @@ export default function BigActionButton({
         };
 
         rec.onerror = () => onStatusChange("idle");
-        rec.onend = () => onStatusChange("idle");
+        rec.onend = () => {
+        // If we were listening, move to thinking instead of instantly going idle
+            onStatusChange("thinking");
+            };
+
 
         recRef.current = rec;
         onStatusChange("listening");
