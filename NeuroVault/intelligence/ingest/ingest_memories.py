@@ -8,6 +8,7 @@ from moorcheh_sdk import MoorchehClient
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Navigate: ingest -> intelligence -> NeuroVault -> data -> memories
 DATA_FOLDER = os.path.abspath(os.path.join(SCRIPT_DIR, '..', '..', 'data', 'memories'))
+print(f"📂 Data folder set to: {DATA_FOLDER}")
 ENV_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, '..', '.env'))
 
 print(f"📍 Script is here:   {SCRIPT_DIR}")
