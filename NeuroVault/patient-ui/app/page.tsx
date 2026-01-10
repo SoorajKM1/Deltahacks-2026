@@ -61,7 +61,7 @@ export default function Page() {
 
         <div className="rounded-2xl border border-black/10 bg-white p-7">
           <div className="text-sm uppercase tracking-wide text-black/60">You said</div>
-          <div className="mt-3 min-h-[56px] text-3xl font-semibold">
+          <div className="mt-3 min-h-14 text-3xl font-semibold">
             {status === "listening" ? "Listening…" : transcript || "Press Ask for Help and speak."}
           </div>
         </div>
