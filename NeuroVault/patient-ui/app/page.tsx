@@ -18,7 +18,7 @@ export default function Page() {
   // --- AUDIO REFS ---
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
-  // ⚡ NEW: Cache the last audio URL so Replay is instant & identical
+  // ⚡ Cache the last audio URL so Replay is instant & identical
   const lastAudioCache = useRef<{ text: string; url: string } | null>(null);
 
   useEffect(() => {
@@ -32,9 +32,9 @@ export default function Page() {
     try {
       // 1. CHECK CACHE: Did we already generate this exact sentence?
       if (lastAudioCache.current && lastAudioCache.current.text === text) {
-        console.log("♻️ Reusing cached audio for instant replay");
+        console.log("Reusing cached audio for instant replay");
         audioRef.current.src = lastAudioCache.current.url;
-        audioRef.current.playbackRate = 1.0; 
+        audioRef.current.playbackRate = 0.80; // 
         audioRef.current.play().catch(e => console.error("Playback error", e));
         return; 
       }
@@ -56,7 +56,8 @@ export default function Page() {
 
       // 4. Play
       audioRef.current.src = audioUrl;
-      audioRef.current.playbackRate = 1.0; // Ensure normal speed
+      audioRef.current.load(); 
+      audioRef.current.playbackRate = 0.80; // Slow & Clear
       
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
@@ -122,8 +123,16 @@ export default function Page() {
   return (
     <NeuroVaultShell status={status}>
       
-      {/* --- HIDDEN PLAYER --- */}
-      <audio ref={audioRef} className="hidden" />
+      {/* --- HIDDEN PLAYER WITH SPEED ENFORCER --- */}
+      <audio 
+        ref={audioRef} 
+        className="hidden"
+        onPlay={(e) => {
+          // ⚡ THE FIX: Force speed to 0.95 every time playback starts.
+          // This overrides the browser's default 1.0 speed on fast networks (Vercel).
+          e.currentTarget.playbackRate = 0.80; 
+        }}
+      />
 
       <div
         className={`
