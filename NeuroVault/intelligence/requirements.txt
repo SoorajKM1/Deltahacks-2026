@@ -1,4 +1,4 @@
 python-dotenv
 pymongo
-moorcheh-sdk
+moorcheh_sdk
 watchdog
