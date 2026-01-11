@@ -113,9 +113,9 @@ export default function Page() {
 
     // Send #file to backend if known, but show friendly transcript
     if (r.memory_id && r.memory_id !== "unknown") {
-      onAsk(`#file:${r.memory_id}`, "Who is this person?");
+      onAsk(`#file:${r.memory_id}`, "Who/What is this?");
     } else {
-      onAsk("Who is this person?");
+      onAsk("Who/What is this?");
     }
   }
 
@@ -160,7 +160,7 @@ export default function Page() {
 
           <div className="flex-1 bg-slate-50/30 p-6 flex flex-col items-center justify-center relative overflow-y-auto min-h-0">
             {/* Optional feedback card */}
-            {lastVision && !answer && transcript && transcript === "Who is this person?" && (
+            {lastVision && !answer && transcript && transcript === "Who/What is this?" && (
               <div className="animate-in zoom-in-95 duration-300 w-full max-w-lg mb-4">
                 <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-100">
                   <div className="flex items-center gap-4">
