@@ -15,17 +15,32 @@ export default function Page() {
   const [showCamera, setShowCamera] = useState(false);
   const [lastVision, setLastVision] = useState<VisionIdentifyResult | null>(null);
 
-  // --- ELEVENLABS: HIDDEN AUDIO PLAYER REF ---
+  // --- AUDIO REFS ---
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // ⚡ NEW: Cache the last audio URL so Replay is instant & identical
+  const lastAudioCache = useRef<{ text: string; url: string } | null>(null);
 
   useEffect(() => {
     if (answer) window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }, [answer]);
 
-  // --- ELEVENLABS: VOICE FUNCTION ---
+  // --- SMART VOICE FUNCTION ---
   async function playVoice(text: string) {
+    if (!audioRef.current) return;
+
     try {
-      // 1. Fetch Audio from Backend
+      // 1. CHECK CACHE: Did we already generate this exact sentence?
+      if (lastAudioCache.current && lastAudioCache.current.text === text) {
+        console.log("♻️ Reusing cached audio for instant replay");
+        audioRef.current.src = lastAudioCache.current.url;
+        audioRef.current.playbackRate = 1.0; 
+        audioRef.current.play().catch(e => console.error("Playback error", e));
+        return; 
+      }
+
+      // 2. IF NOT IN CACHE: Generate New Audio
+      console.log("🎤 Generating new audio for:", text);
       const response = await fetch("/api/speak", {
         method: "POST",
         body: JSON.stringify({ text }),
@@ -36,19 +51,18 @@ export default function Page() {
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      // 2. Play using the Hidden Audio Element (Most reliable method)
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        
-        // Optimized speed for clarity (0.9 is perfect for seniors)
-        audioRef.current.playbackRate = 0.9; 
-        
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.error("❌ Browser blocked audio:", error);
-          });
-        }
+      // 3. Save to Cache
+      lastAudioCache.current = { text: text, url: audioUrl };
+
+      // 4. Play
+      audioRef.current.src = audioUrl;
+      audioRef.current.playbackRate = 1.0; // Ensure normal speed
+      
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error("❌ Browser blocked audio:", error);
+        });
       }
     } catch (err) {
       console.error("Audio error:", err);
@@ -77,7 +91,7 @@ export default function Page() {
       const a = await response.text();
       setAnswer(a);
       
-      // --- USE ELEVENLABS INSTEAD OF ROBOT VOICE ---
+      // Speak the new answer (Generates new file)
       playVoice(a);
 
     } catch (e) {
@@ -108,7 +122,7 @@ export default function Page() {
   return (
     <NeuroVaultShell status={status}>
       
-      {/* --- ELEVENLABS: HIDDEN PLAYER --- */}
+      {/* --- HIDDEN PLAYER --- */}
       <audio ref={audioRef} className="hidden" />
 
       <div
@@ -145,8 +159,8 @@ export default function Page() {
           </header>
 
           <div className="flex-1 bg-slate-50/30 p-6 flex flex-col items-center justify-center relative overflow-y-auto min-h-0">
-            {/* Optional feedback card (NO Ask button anymore) */}
-            {lastVision && !answer && transcript && transcript === "Who/What is this?" && (
+            {/* Optional feedback card */}
+            {lastVision && !answer && transcript && transcript === "Who is this person?" && (
               <div className="animate-in zoom-in-95 duration-300 w-full max-w-lg mb-4">
                 <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-100">
                   <div className="flex items-center gap-4">
@@ -209,6 +223,8 @@ export default function Page() {
                   </div>
                 </div>
               )}
+              
+              {/* Pass the function to ResponseCard, which now intelligently uses the cache */}
               {answer && <ResponseCard answer={answer} onReplay={playVoice} />}
             </div>
           </div>
