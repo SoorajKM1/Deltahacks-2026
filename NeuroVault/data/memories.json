@@ -19,5 +19,26 @@
     "image": null,
     "author": "Caregiver",
     "timestamp": "2026-01-10T09:10:00.000Z"
+  },
+  {
+    "id": "1768090242388",
+    "text": "Dinner is usually served to you by your maid Melissa at 7PM",
+    "image": null,
+    "author": "Mark",
+    "timestamp": "2026-01-11T00:10:42.388Z"
+  },
+  {
+    "id": "1768090422521",
+    "text": "You are Type 2 Diabetic. You have been assigned medications according to the prescription given by Doctor Paul",
+    "image": null,
+    "author": "Maanas",
+    "timestamp": "2026-01-11T00:13:42.521Z"
+  },
+  {
+    "id": "1768090696447",
+    "text": "This is a text detail",
+    "image": null,
+    "author": "Maanas",
+    "timestamp": "2026-01-11T00:18:16.447Z"
   }
 ]
