@@ -130,7 +130,7 @@ export async function POST(req: Request) {
     1. Answer using ONLY the retrieved memory.
     2. If the question asks about "today" but the memory only contains usual habits, answer with the usual routine from memory.
     3. If the memory contains partial relevant info, answer with what you know. Do NOT call Sarah for partial answers.
-    4. Only say "I'm not sure, let's call Sarah." if the memory has no relevant info at all.
+    4. Only say "I'm not sure, this is not in my memory." if the memory has no relevant info at all.
     5. Keep the answer under 20 words.
     6. Speak slowly and clearly.
     `;
