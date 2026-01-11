@@ -1,0 +1,23 @@
+[
+  {
+    "id": "init_001",
+    "text": "The spare house keys are in the blue ceramic bowl by the front door.",
+    "image": null,
+    "author": "Caregiver",
+    "timestamp": "2026-01-10T09:00:00.000Z"
+  },
+  {
+    "id": "init_002",
+    "text": "Grandson Timmy plays soccer every Saturday at 10 AM. He wears jersey number 7.",
+    "image": null,
+    "author": "Caregiver",
+    "timestamp": "2026-01-10T09:05:00.000Z"
+  },
+  {
+    "id": "init_003",
+    "text": "The wifi password is 'FamilyLove2026'.",
+    "image": null,
+    "author": "Caregiver",
+    "timestamp": "2026-01-10T09:10:00.000Z"
+  }
+]

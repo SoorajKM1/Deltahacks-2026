@@ -1,56 +1,55 @@
 import time
 import os
-import sys
 import subprocess
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-BASE_DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
+# --- CONFIGURATION ---
+# Current path: NeuroVault/intelligence/auto_ingest.py
+# Target path:  NeuroVault/data/
+BASE_DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
-MEMORIES_DIR = os.path.join(BASE_DATA_DIR, "memories")
-IMAGES_DIR   = os.path.join(BASE_DATA_DIR, "images")
-
-INGEST_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "ingest", "ingest_memories.py"))
+MEMORIES_DIR = os.path.join(BASE_DATA_DIR, 'memories')
+IMAGES_DIR   = os.path.join(BASE_DATA_DIR, 'images')
 
 class SmartHandler(FileSystemEventHandler):
     def on_created(self, event):
-        if event.is_directory:
-            return
         self.process_change(event.src_path, "✨ Created")
 
     def on_modified(self, event):
-        if event.is_directory:
-            return
         self.process_change(event.src_path, "⚡ Modified")
 
     def process_change(self, file_path, action_type):
         filename = os.path.basename(file_path)
-
+        
+        # 1. HANDLE TEXT (Actual Memory Upload)
         if file_path.endswith(".txt"):
             print(f"\n{action_type} Text: {filename}")
             print("   🔄 Syncing Brain...")
             try:
-                subprocess.run([sys.executable, INGEST_SCRIPT], check=True)
+                # Runs your existing ingest script
+                subprocess.run(["python", "ingest/ingest_memories.py"], check=True)
             except subprocess.CalledProcessError:
-                print("   ❌ Error during sync. Check ingest_memories.py output above.")
+                print("   ❌ Error during sync. Check ingest_memories.py")
             else:
                 print("   ✅ Sync Complete.")
 
-        elif file_path.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+        # 2. HANDLE IMAGES (Log Only for now)
+        elif file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
             print(f"\n{action_type} Image: {filename}")
             print("   📸 New photo added to vault.")
-            print("   ℹ️ If you updated labels.json, remember to POST /rebuild on the vision server.")
+            # Future: You could trigger an image analysis script here
 
 if __name__ == "__main__":
+    # Safety Check
     if not os.path.exists(MEMORIES_DIR):
         print(f"⚠️ Creating missing folder: {MEMORIES_DIR}")
         os.makedirs(MEMORIES_DIR)
-
     if not os.path.exists(IMAGES_DIR):
         print(f"⚠️ Creating missing folder: {IMAGES_DIR}")
         os.makedirs(IMAGES_DIR)
 
-    print("👀 WATCHER STARTED")
+    print(f"👀 WATCHER STARTED")
     print(f"   📂 Monitoring Memories: {MEMORIES_DIR}")
     print(f"   📂 Monitoring Images:   {IMAGES_DIR}")
     print("---------------------------------------------------")
