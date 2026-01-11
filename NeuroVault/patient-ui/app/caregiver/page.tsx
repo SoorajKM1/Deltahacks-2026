@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { checkPrivacy } from "@/lib/privacyFilter";
 
@@ -32,18 +32,23 @@ export default function CaregiverPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [context, setContext] = useState("");
-  // 1. NEW: Author State
-  const [author, setAuthor] = useState(""); 
+  const [author, setAuthor] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const [logs, setLogs] = useState<LogEntry[]>([
-    {
-      ts: nowTime(),
-      level: "SECURE",
-      message:
-        'SECURE: Uploaded "grandson_tim.png" + "This is your grandson Timmy. He loves soccer."',
-    },
-  ]);
+  // ✅ Fix: start logs empty to avoid SSR/client mismatch from Date()
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  // ✅ Fix: add demo log only on client after mount
+  useEffect(() => {
+    setLogs([
+      {
+        ts: nowTime(),
+        level: "SECURE",
+        message:
+          'SECURE: Uploaded "grandson_tim.png" + "This is your grandson Timmy. He loves soccer."',
+      },
+    ]);
+  }, []);
 
   const fileName = useMemo(() => file?.name || "No file selected", [file]);
 
@@ -53,63 +58,60 @@ export default function CaregiverPage() {
 
     setBusy(true);
 
-    // 1. Run Privacy Check
     const { cleanText, triggered } = checkPrivacy(raw);
     const level: LogEntry["level"] = triggered ? "REDACTED" : "SECURE";
     const name = file?.name || "no_file";
-    const authorName = author.trim() || "Caregiver"; // Default if empty
+    const authorName = author.trim() || "Caregiver";
 
     try {
-      // 2. Prepare Image Data (if exists)
-      let base64Image = null;
+      let base64Image: string | null = null;
       if (file) {
         base64Image = await fileToBase64(file);
       }
 
-      // 3. REAL BACKEND CALL
       const response = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: cleanText,
-          image: base64Image, // Sends the actual image data
+          image: base64Image,
           author: authorName,
         }),
       });
 
       if (!response.ok) throw new Error("Upload failed");
 
-      // 4. Update Logs on Success
       const prefix = triggered ? "PRIVACY FILTER ACTIVE:" : "SECURE:";
       const logMessage = `${prefix} [${authorName}] Uploaded "${name}" + "${cleanText}"`;
-      
+
       setLogs((prev) => [{ ts: nowTime(), level, message: logMessage }, ...prev]);
 
-      // Reset Form
       setContext("");
       setFile(null);
-      // setAuthor(""); // Optional: keep author name filled for next upload?
-      
+      // setAuthor(""); // optional
     } catch (error) {
       console.error(error);
-      setLogs((prev) => [{ 
-        ts: nowTime(), 
-        level: "REDACTED", // Use REDACTED color for errors to grab attention
-        message: "❌ ERROR: Failed to save memory to database." 
-      }, ...prev]);
+      setLogs((prev) => [
+        {
+          ts: nowTime(),
+          level: "REDACTED",
+          message: "❌ ERROR: Failed to save memory to database.",
+        },
+        ...prev,
+      ]);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-black/[0.03] px-6 py-10">
+    <main className="min-h-screen bg-black/3 px-6 py-10">
       <div className="mx-auto max-w-3xl space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-semibold text-blue-700">Caregiver Portal</h1>
 
           <button
-            className="rounded-xl border border-black/15 bg-white px-5 py-3 text-lg text-black/70 hover:bg-black/[0.03]"
+            className="rounded-xl border border-black/15 bg-white px-5 py-3 text-lg text-black/70 hover:bg-black/30"
             onClick={() => router.push("/")}
           >
             Back to NeuroVault
@@ -120,8 +122,6 @@ export default function CaregiverPage() {
           <h2 className="text-2xl font-semibold">Add New Memory</h2>
 
           <div className="mt-6 space-y-6">
-            
-            {/* --- NEW: AUTHOR INPUT --- */}
             <div className="space-y-2">
               <div className="text-lg font-semibold">1. Who are you?</div>
               <input
@@ -129,7 +129,7 @@ export default function CaregiverPage() {
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="e.g. Mark, Martha, Dr. Smith"
-                className="w-full rounded-2xl border border-black/15 p-4 text-lg outline-none focus:border-black/30 bg-gray-50"
+                className="w-full rounded-2xl border border-black/15 bg-gray-50 p-4 text-lg outline-none focus:border-black/30"
               />
             </div>
 
@@ -137,7 +137,6 @@ export default function CaregiverPage() {
               <div className="text-lg font-semibold">2. Select Photo (optional)</div>
 
               <div className="flex flex-wrap items-center gap-4">
-                {/* Hidden real input */}
                 <input
                   id="memory-photo"
                   type="file"
@@ -146,7 +145,6 @@ export default function CaregiverPage() {
                   className="hidden"
                 />
 
-                {/* Grey button */}
                 <label
                   htmlFor="memory-photo"
                   className="cursor-pointer rounded-xl bg-black/10 px-6 py-3 text-lg font-semibold text-black/80 hover:bg-black/15"
@@ -154,12 +152,10 @@ export default function CaregiverPage() {
                   Choose file
                 </label>
 
-                {/* Filename pill */}
                 <div className="rounded-xl border border-black/10 bg-white px-4 py-3 text-lg text-black/60">
                   {fileName}
                 </div>
 
-                {/* Remove button */}
                 {file && (
                   <button
                     type="button"
@@ -192,7 +188,7 @@ export default function CaregiverPage() {
               onClick={onUpload}
               disabled={busy || !context.trim()}
               className={`w-full rounded-2xl py-5 text-2xl font-semibold text-white disabled:opacity-50 transition ${
-                 busy ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+                busy ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {busy ? "Uploading…" : "Secure Upload"}
@@ -208,8 +204,8 @@ export default function CaregiverPage() {
               <div
                 key={idx}
                 className={`rounded-2xl border p-5 font-mono text-base leading-relaxed ${
-                    l.level === "REDACTED" 
-                    ? "border-red-200 bg-red-50 text-red-900" 
+                  l.level === "REDACTED"
+                    ? "border-red-200 bg-red-50 text-red-900"
                     : "border-emerald-200 bg-emerald-50 text-emerald-900"
                 }`}
               >
