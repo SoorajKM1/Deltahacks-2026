@@ -1,155 +1,114 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const NAMESPACE = "grandpa_joe_FINAL";
-const MOORCHEH_SEARCH_URL = "https://api.moorcheh.ai/v2/search";
 
 function extractFileId(q: string) {
   const m = q.trim().match(/^#file:(.+)$/i);
   return m ? m[1].trim() : null;
 }
 
-function safeJsonParse(raw: string) {
-  try {
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function buildContextFromResults(results: any[]) {
-  return results
-    .map((r) => r?.text)
-    .filter(Boolean)
-    .join("\n\n")
-    .trim();
-}
-
-// Super simple non-LLM fallback so demo never dies
-function fallbackAnswerFromContext(contextText: string) {
-  if (!contextText) return "I’m not sure. Let’s call Sarah.";
-
-  // Keep it short, like your prompt wanted
-  const words = contextText.replace(/\s+/g, " ").split(" ").slice(0, 18);
-  return `${words.join(" ")}…`;
-}
-
-async function moorchehFetch(body: any) {
-  const apiKey =
-    process.env.MOORCHEH_API_KEY ||
-    process.env.NEXT_PUBLIC_MOORCHEH_API_KEY ||
-    "";
-
-  if (!apiKey) {
-    return {
-      ok: false,
-      status: 500,
-      raw: `{"message":"Missing MOORCHEH_API_KEY env var"}`,
-    };
-  }
-
-  const res = await fetch(MOORCHEH_SEARCH_URL, {
+async function moorchehSearchSemantic(query: string, apiKey: string) {
+  // v1 endpoint you are using now
+  const res = await fetch("https://api.moorcheh.ai/v1/search", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      query,
+      namespaces: [NAMESPACE],
+      top_k: 3,
+    }),
   });
 
   const raw = await res.text();
   return { ok: res.ok, status: res.status, raw };
 }
 
-async function moorchehSearchByFileId(fileId: string) {
-  // Use a single-space query so some backends skip embedding
-  // If Moorcheh still tries to embed and Bedrock is down, we will fallback gracefully.
-  return moorchehFetch({
-    namespace: NAMESPACE,
-    query: " ",
-    limit: 3,
-    metadata_filter: { file: fileId },
+async function moorchehSearchByFileId(fileId: string, apiKey: string) {
+  // IMPORTANT:
+  // This depends on Moorcheh supporting metadata-only filtering.
+  // Your ingest script already uploads metadata.file = filename.
+  // Use the v2 endpoint if it supports metadata_filter.
+  const res = await fetch("https://api.moorcheh.ai/v2/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      namespace: NAMESPACE,
+      query: "file", // harmless small query, still might embed on some backends
+      limit: 3,
+      metadata_filter: { file: fileId },
+    }),
   });
-}
 
-async function moorchehSemanticSearch(query: string) {
-  return moorchehFetch({
-    namespace: NAMESPACE,
-    query,
-    limit: 3,
-  });
+  const raw = await res.text();
+  return { ok: res.ok, status: res.status, raw };
 }
 
 export async function POST(req: Request) {
   try {
-    const payload = await req.json();
-    const messages = Array.isArray(payload?.messages) ? payload.messages : [];
-    const lastUserMessage = messages[messages.length - 1]?.content || "";
+    const { messages } = await req.json();
+    const lastUserMessage = messages?.[messages.length - 1]?.content?.toString() || "";
 
-    console.log(`🧠 Searching Moorcheh for: "${lastUserMessage}"`);
+    const apiKey = process.env.NEXT_PUBLIC_MOORCHEH_API_KEY || "";
+    if (!apiKey) return new NextResponse("Missing Moorcheh key", { status: 500 });
+
+    console.log(`🧠 Chat query: "${lastUserMessage}"`);
 
     const fileId = extractFileId(lastUserMessage);
 
-    // 1) Retrieve memory
-    const search = fileId
-      ? await moorchehSearchByFileId(fileId)
-      : await moorchehSemanticSearch(lastUserMessage);
+    // 1) If we have #file:, do metadata lookup (no LLM required)
+    if (fileId) {
+      console.log("🗂️ File lookup:", fileId);
 
-    console.log("Moorcheh status:", search.status);
-    console.log("Moorcheh raw:", (search.raw || "").slice(0, 800));
+      const { ok, status, raw } = await moorchehSearchByFileId(fileId, apiKey);
+      console.log("Moorcheh(file) status:", status);
+      console.log("Moorcheh(file) raw:", raw.slice(0, 800));
 
-    // If Moorcheh fails, do not 500 your UI
-    if (!search.ok) {
-      return new NextResponse(
-        "I’m having trouble accessing memory right now. Please try again or ask the caregiver to re-sync.",
-        { status: 200 }
-      );
+      if (!ok) {
+        return new NextResponse("Memory lookup failed", { status: 500 });
+      }
+
+      // Try parse both possible formats
+      const parsed = JSON.parse(raw);
+
+      // v2 might return {documents:[{text,...}]} or {results:[{text,...}]}
+      const docs = Array.isArray(parsed?.documents)
+        ? parsed.documents
+        : Array.isArray(parsed?.results)
+          ? parsed.results
+          : [];
+
+      const text = docs?.[0]?.text || "";
+      if (!text) return new NextResponse("I’m not sure, let’s call Sarah.", { status: 200 });
+
+      // Return plain text memory to the client (client will TTS)
+      return new NextResponse(text, { status: 200 });
     }
 
-    const data = safeJsonParse(search.raw);
-    const results = Array.isArray(data?.results) ? data.results : [];
-    const contextText = buildContextFromResults(results);
+    // 2) Otherwise: normal semantic search (this is where you were hitting bedrock embedding error)
+    const { ok, status, raw } = await moorchehSearchSemantic(lastUserMessage, apiKey);
+    console.log("Moorcheh(semantic) status:", status);
+    console.log("Moorcheh(semantic) raw:", raw.slice(0, 800));
 
-    console.log("Moorcheh results count:", results.length);
-    console.log("Context length:", contextText.length);
-    console.log("Context preview:", contextText.slice(0, 200));
+    if (!ok) return new NextResponse("Moorcheh search failed", { status: 500 });
 
-    // 2) Generate answer (Gemini if available, else fallback)
-    const googleKey = process.env.GOOGLE_API_KEY || "";
-    if (!googleKey) {
-      return new NextResponse(fallbackAnswerFromContext(contextText), { status: 200 });
-    }
+    const parsed = JSON.parse(raw);
+    const results = Array.isArray(parsed?.results) ? parsed.results : [];
+    const contextText = results.map((r: any) => r.text).filter(Boolean).join("\n\n");
 
-    try {
-      const genAI = new GoogleGenerativeAI(googleKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // If you still want Gemini sometimes, keep it here.
+    // For now, return context directly so TTS reads it.
+    if (!contextText) return new NextResponse("I’m not sure, let’s call Sarah.", { status: 200 });
 
-      const systemPrompt = `
-ROLE: You are "NeuroVault," a compassionate dementia care assistant.
+    return new NextResponse(contextText, { status: 200 });
 
-RETRIEVED MEMORY:
-${contextText}
-
-USER QUESTION:
-${lastUserMessage}
-
-INSTRUCTIONS:
-1. Answer using ONLY the provided MEMORY.
-2. If the answer isn't in the memory, say "I'm not sure, let's call Sarah."
-3. Keep the answer under 20 words.
-4. Speak slowly and clearly.
-`.trim();
-
-      const result = await model.generateContent(systemPrompt);
-      const responseText = result.response.text();
-
-      return new NextResponse(responseText, { status: 200 });
-    } catch (e) {
-      console.log("Gemini failed, using fallback:", e);
-      return new NextResponse(fallbackAnswerFromContext(contextText), { status: 200 });
-    }
-  } catch (error) {
-    console.error("❌ Error in Chat Route:", error);
-    return new NextResponse("I’m having trouble thinking right now.", { status: 200 });
+  } catch (e) {
+    console.error("❌ route.ts error:", e);
+    return new NextResponse("I am having trouble thinking right now.", { status: 500 });
   }
 }
