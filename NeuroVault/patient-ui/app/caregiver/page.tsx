@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Terminal, ShieldCheck, Lock, User } from "lucide-react";
 import { DropZone } from "./DropZone";
 import { checkPrivacy } from "@/lib/privacyFilter";
+import Image from "next/image";
 
 // --- TYPES ---
 type LogType = "info" | "success" | "error" | "warning";
@@ -114,9 +115,15 @@ export default function CaregiverPage() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
-              N
-            </div>
+            <div className="relative w-12 h-12">
+                <Image 
+                  src="/assets/logo.png" 
+                  alt="NeuroVault Logo" 
+                  fill
+                  priority
+                  className="object-contain"
+                />
+              </div>
             <div>
               <h1 className="font-bold text-xl tracking-tight text-slate-900 leading-none">Caregiver Portal</h1>
               <p className="text-xs text-slate-500 font-medium mt-1">Authorized Access Only</p>
