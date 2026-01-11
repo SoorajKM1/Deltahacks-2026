@@ -186,7 +186,7 @@ export default function CaregiverPage() {
               className={`
                 w-full py-5 rounded-2xl font-bold text-lg text-white shadow-xl transition-all duration-300 transform active:scale-[0.98]
                 disabled:opacity-50 disabled:cursor-not-allowed
-                ${status === "idle" ? "bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-blue-500/25" : ""}
+                ${status === "idle" ? "bg-linear-to-r from-blue-600 to-blue-500 hover:shadow-blue-500/25" : ""}
                 ${status === "uploading" ? "bg-slate-800 cursor-wait" : ""}
                 ${status === "success" ? "bg-green-500 shadow-green-500/25" : ""}
               `}
@@ -209,7 +209,7 @@ export default function CaregiverPage() {
 
         {/* --- RIGHT COLUMN: LOGS (4 Cols) --- */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-slate-900 rounded-3xl p-6 shadow-2xl flex flex-col h-[600px] border border-slate-800 sticky top-24">
+          <div className="bg-slate-900 rounded-3xl p-6 shadow-2xl flex flex-col h-150 border border-slate-800 sticky top-24">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-800 mb-4">
               <div className="p-2 bg-slate-800 rounded-lg">
                 <Terminal size={18} className="text-blue-400" />
@@ -231,7 +231,7 @@ export default function CaregiverPage() {
                 <div
                   key={log.id}
                   className={`
-                    p-3 rounded-xl border-l-2 animate-in fade-in slide-in-from-left-2 duration-300 break-words
+                    p-3 rounded-xl border-l-2 animate-in fade-in slide-in-from-left-2 duration-300 wrap-break-word
                     ${log.type === "info" ? "bg-slate-800/50 border-blue-500 text-blue-200" : ""}
                     ${log.type === "success" ? "bg-green-900/20 border-green-500 text-green-300" : ""}
                     ${log.type === "warning" ? "bg-orange-900/20 border-orange-500 text-orange-200" : ""}

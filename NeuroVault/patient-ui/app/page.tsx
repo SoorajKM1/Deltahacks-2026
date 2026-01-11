@@ -256,14 +256,14 @@ export default function Page() {
         {/* --- CAMERA CARD --- */}
         <div
           className={`
-           absolute left-[47rem] top-0 bottom-0 h-full
-           w-[45rem] bg-slate-900 rounded-[3rem] shadow-2xl border-4 border-slate-800 overflow-hidden flex flex-col 
-           transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-left
-           ${
-             showCamera
-               ? "opacity-100 scale-100 translate-x-0 rotate-0"
-               : "opacity-0 scale-90 -translate-x-10 rotate-[-5deg] pointer-events-none"
-           }
+            absolute left-188 top-0 bottom-0 h-full
+            w-180 bg-slate-900 rounded-[3rem] shadow-2xl border-4 border-slate-800 overflow-hidden flex flex-col 
+            transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-left
+            ${
+              showCamera
+                ? "opacity-100 scale-100 translate-x-0 rotate-0"
+                : "opacity-0 scale-90 -translate-x-10 rotate-[-5deg] pointer-events-none"
+            }
         `}
         >
           <div className="flex items-center justify-between p-6 bg-slate-900 text-white z-10 shrink-0">

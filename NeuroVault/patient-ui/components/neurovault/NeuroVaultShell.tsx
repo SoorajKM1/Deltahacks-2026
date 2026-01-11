@@ -17,7 +17,7 @@ export default function NeuroVaultShell({
       ${status === "thinking" ? "bg-[#F0F7FF]" : ""}  /* Very faint blue tint */
     `}>
       {/* Top Decorative Bar (Premium Touch) */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 opacity-80" />
+      <div className="h-1.5 w-full bg-linear-to-r from-blue-500 via-purple-500 to-blue-500 opacity-80" />
 
       {/* Main Content Container */}
       <div className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 flex flex-col justify-center">
