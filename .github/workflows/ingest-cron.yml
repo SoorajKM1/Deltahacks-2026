@@ -1,0 +1,38 @@
+name: Auto-Ingest Memories
+
+on:
+  schedule:
+    # Runs every 10 minutes
+    # Note: GitHub Actions schedule can be slightly delayed during high load
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows you to click "Run Now" manually for testing
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Ensure you are pointing to the correct requirements.txt location
+          # Based on your screenshots, it's inside 'NeuroVault/intelligence'
+          if [ -f NeuroVault/intelligence/requirements.txt ]; then pip install -r NeuroVault/intelligence/requirements.txt; fi
+          
+      - name: Run Ingest Script
+        env:
+          # You MUST add these secrets in your GitHub Repo Settings
+          MOORCHEH_API_KEY: ${{ secrets.MOORCHEH_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          # Navigate to the folder and run the single ingest script
+          cd NeuroVault/intelligence
+          python ingest_memories.py
