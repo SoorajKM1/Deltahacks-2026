@@ -1,11 +1,32 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { UploadCloud, Image as ImageIcon, X } from "lucide-react"; // npm install lucide-react
+import { useState, useCallback, useEffect } from "react";
+import { UploadCloud, Image as ImageIcon, X } from "lucide-react";
 
-export function DropZone({ onFileSelect }: { onFileSelect: (f: File | null) => void }) {
+// 1. Add 'selectedFile' to the props interface
+interface DropZoneProps {
+  onFileSelect: (f: File | null) => void;
+  selectedFile: File | null; 
+}
+
+export function DropZone({ onFileSelect, selectedFile }: DropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+
+  // 2. NEW: Sync local preview with parent's file state
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreview(null);
+      return;
+    }
+
+    // Create a temporary URL for the preview (lighter/faster than FileReader)
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreview(objectUrl);
+
+    // Cleanup memory when component unmounts or file changes
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedFile]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -23,23 +44,20 @@ export function DropZone({ onFileSelect }: { onFileSelect: (f: File | null) => v
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      processFile(file);
+      // Just pass to parent, let the useEffect above handle the preview
+      onFileSelect(e.dataTransfer.files[0]);
     }
-  }, []);
+  }, [onFileSelect]);
 
-  const processFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
-    onFileSelect(file);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+       onFileSelect(e.target.files[0]);
+    }
   };
 
   const clearFile = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setPreview(null);
-    onFileSelect(null);
+    onFileSelect(null); // Parent sets file to null -> useEffect clears preview
   };
 
   return (
@@ -60,9 +78,9 @@ export function DropZone({ onFileSelect }: { onFileSelect: (f: File | null) => v
       <input 
         type="file" 
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-        onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])}
+        onChange={handleInputChange}
         accept="image/*"
-        disabled={!!preview} // Disable click if preview exists (use clear button)
+        disabled={!!preview} 
       />
 
       {preview ? (
@@ -91,4 +109,4 @@ export function DropZone({ onFileSelect }: { onFileSelect: (f: File | null) => v
       )}
     </div>
   );
-}   
+}

@@ -159,7 +159,7 @@ export default function CaregiverPage() {
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 2. Photo Evidence <span className="text-slate-300 font-normal normal-case">(Optional)</span>
               </label>
-              <DropZone key={file ? "loaded" : "empty"} onFileSelect={setFile} />
+              <DropZone key={file ? "loaded" : "empty"} onFileSelect={setFile} selectedFile={file} />
             </div>
 
             {/* 3. CONTEXT */}
