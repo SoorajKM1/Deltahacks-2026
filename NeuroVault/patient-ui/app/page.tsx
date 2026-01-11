@@ -209,7 +209,7 @@ export default function Page() {
                   </div>
                 </div>
               )}
-              {answer && <ResponseCard answer={answer} />}
+              {answer && <ResponseCard answer={answer} onReplay={playVoice} />}
             </div>
           </div>
 

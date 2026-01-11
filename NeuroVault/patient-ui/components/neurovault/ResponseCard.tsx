@@ -2,7 +2,13 @@
 
 import { Sparkles, Copy, Volume2 } from "lucide-react";
 
-export default function ResponseCard({ answer }: { answer: string }) {
+// Define the shape of the props so we can pass the Replay function
+interface ResponseCardProps {
+  answer: string;
+  onReplay: (text: string) => void; // <--- NEW PROP
+}
+
+export default function ResponseCard({ answer, onReplay }: ResponseCardProps) {
   if (!answer) return null;
 
   return (
@@ -31,7 +37,8 @@ export default function ResponseCard({ answer }: { answer: string }) {
         {/* Action Footer */}
         <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-4">
           <button 
-            onClick={() => window.speechSynthesis.speak(new SpeechSynthesisUtterance(answer))}
+            // ⚡ FIX: Call the function passed from the parent (ElevenLabs)
+            onClick={() => onReplay(answer)} 
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100 transition-colors"
           >
             <Volume2 size={16} />
