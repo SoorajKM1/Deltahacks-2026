@@ -15,7 +15,7 @@ from deepface import DeepFace
 app = FastAPI(title="NeuroVault Vision (DeepFace)")
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))  # NeuroVault/
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))  # NeuroVault/
 DATA_DIR = os.path.join(REPO_ROOT, "data")
 IMAGES_DIR = os.path.join(DATA_DIR, "images")
 LABELS_PATH = os.path.join(DATA_DIR, "labels.json")

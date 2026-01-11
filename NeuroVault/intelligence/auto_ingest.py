@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            subprocess.run(["python", "ingest/ingest_memories.py"], check=True)
+            subprocess.run(["python", "./ingest_memories.py"], check=True)
         except subprocess.CalledProcessError:
             print("❌ Error during mongo ingest. Check ingest_memories.py")
         time.sleep(POLL_SECONDS)

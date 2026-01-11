@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from moorcheh_sdk import MoorchehClient
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ENV_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".env"))
+ENV_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, ".", ".env"))
 load_dotenv(ENV_PATH)
 
 NAMESPACE = "grandpa_joe_FINAL"
