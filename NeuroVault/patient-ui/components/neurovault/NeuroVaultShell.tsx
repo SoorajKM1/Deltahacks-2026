@@ -1,30 +1,35 @@
-export default function NeuroVaultShell({
-    children,
-    status,
-    }: {
-    children: React.ReactNode;
-    status: "idle" | "listening" | "thinking";
-    }) {
-    const statusText =
-        status === "thinking" ? "Checking…" : status === "listening" ? "Listening" : "Ready";
+"use client";
 
-    return (
-        <main className="min-h-screen bg-black/[0.03] px-6 py-10 flex items-center justify-center">
-        <div className="w-full max-w-2xl">
-            <div className="bg-white rounded-3xl border border-black/10 shadow-sm p-10 relative">
-            <div className="absolute top-6 right-6">
-                <span className="inline-flex items-center rounded-full border border-black/10 px-4 py-2 text-lg text-black/70">
-                {statusText}
-                </span>
-            </div>
+import { ReactNode } from "react";
 
-            {children}
-            </div>
+export default function NeuroVaultShell({ 
+  children, 
+  status 
+}: { 
+  children: ReactNode; 
+  status: "idle" | "listening" | "thinking";
+}) {
+  return (
+    <main className={`
+      min-h-screen transition-colors duration-700 ease-in-out flex flex-col
+      ${status === "idle" ? "bg-slate-50" : ""}
+      ${status === "listening" ? "bg-[#FFF5F5]" : ""}  /* Very faint red tint */
+      ${status === "thinking" ? "bg-[#F0F7FF]" : ""}  /* Very faint blue tint */
+    `}>
+      {/* Top Decorative Bar (Premium Touch) */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 opacity-80" />
 
-            <div className="mt-4 text-center text-sm text-black/50">
-            NeuroVault helps only when you ask.
-            </div>
-        </div>
-        </main>
-    );
+      {/* Main Content Container */}
+      <div className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 flex flex-col justify-center">
+        {children}
+      </div>
+
+      {/* Footer Branding */}
+      <footer className="py-6 text-center">
+        <p className="text-xs font-bold tracking-widest text-slate-300 uppercase">
+          NeuroVault System • v2.0
+        </p>
+      </footer>
+    </main>
+  );
 }
