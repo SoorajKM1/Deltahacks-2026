@@ -35,4 +35,4 @@ jobs:
         run: |
           # Navigate to the folder and run the single ingest script
           cd NeuroVault/intelligence
-          python ingest_memories.py
+          python auto_ingest.py
