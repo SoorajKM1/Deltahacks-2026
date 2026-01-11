@@ -1,12 +1,33 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema } from "mongoose";
 
-const MemorySchema = new Schema({
-  text: { type: String, required: true },
-  author: { type: String, default: "Caregiver" },
-  // We save the image as a huge text string (Base64) 
-  image: { type: String }, 
-  timestamp: { type: Date, default: Date.now },
-});
+const MemorySchema = new Schema(
+  {
+    text: { type: String, required: true, trim: true },
+    author: { type: String, default: "Caregiver" },
 
-// This prevents "Model already exists" errors during hot-reloads
-export default mongoose.models.Memory || mongoose.model('Memory', MemorySchema);
+    // Prefer this over base64. Store a URL or a file key.
+    imageUrl: { type: String, default: null },
+
+    // If you still want to temporarily store base64, keep this optional.
+    // Strongly consider removing later.
+    image: { type: String, default: null },
+
+    // Ingestion pipeline status
+    moorchehStatus: {
+      type: String,
+      enum: ["pending", "indexed", "failed"],
+      default: "pending",
+      index: true,
+    },
+    attempts: { type: Number, default: 0 },
+    indexedAt: { type: Date, default: null },
+
+    // Useful for multi-user / multi-patient later
+    patientId: { type: String, default: "default", index: true },
+  },
+  {
+    timestamps: true, // adds createdAt and updatedAt automatically
+  }
+);
+
+export default mongoose.models.Memory || mongoose.model("Memory", MemorySchema);

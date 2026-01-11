@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Terminal, ShieldCheck, Lock, User } from "lucide-react";
 import { DropZone } from "./DropZone";
@@ -30,16 +30,24 @@ export default function CaregiverPage() {
   const [context, setContext] = useState("");
   const [author, setAuthor] = useState("");
   const [status, setStatus] = useState<"idle" | "uploading" | "success">("idle");
-  
+
   // Logs State
-  const [logs, setLogs] = useState<LogEntry[]>([{
-    id: 1, ts: nowTime(), type: "success", 
-    message: 'SECURE: System initialized. Ready for encrypted upload.'
-  }]);
+  const [logs, setLogs] = useState<LogEntry[]>([
+    {
+      id: 1,
+      ts: nowTime(),
+      type: "success",
+      message: "SECURE: System initialized. Ready for encrypted upload.",
+    },
+  ]);
+
+  // ✅ prevents duplicate keys when multiple logs are added in same millisecond
+  const nextLogId = useRef(2);
 
   // Helper to add logs
   const addLog = (text: string, type: LogType = "info") => {
-    setLogs(prev => [{ id: Date.now(), ts: nowTime(), type, message: text }, ...prev]);
+    const id = nextLogId.current++;
+    setLogs((prev) => [{ id, ts: nowTime(), type, message: text }, ...prev]);
   };
 
   async function onUpload() {
@@ -47,7 +55,7 @@ export default function CaregiverPage() {
     if (!raw && !file) return;
 
     setStatus("uploading");
-    
+
     // 1. Prepare Data
     const authorName = author.trim() || "Caregiver";
     const fileName = file?.name || "no_image";
@@ -61,14 +69,13 @@ export default function CaregiverPage() {
 
     try {
       // 3. Convert Image
-      let base64Image = null;
+      let base64Image: string | null = null;
       if (file) {
         addLog(`PROCESSING: Encoding image "${fileName}"...`, "info");
         base64Image = await fileToBase64(file);
       }
 
       // 4. Send to Backend
-      // Note: This connects to the endpoint your teammate creates
       const response = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,10 +98,9 @@ export default function CaregiverPage() {
       setTimeout(() => {
         setStatus("idle");
         setContext("");
-        setFile(null); 
+        setFile(null);
         // We keep 'author' so they don't have to re-type it
       }, 3000);
-
     } catch (error) {
       console.error(error);
       setStatus("idle");
@@ -104,18 +110,22 @@ export default function CaregiverPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
-      
       {/* HEADER */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">N</div>
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
+              N
+            </div>
             <div>
               <h1 className="font-bold text-xl tracking-tight text-slate-900 leading-none">Caregiver Portal</h1>
               <p className="text-xs text-slate-500 font-medium mt-1">Authorized Access Only</p>
             </div>
           </div>
-          <Link href="/" className="group flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors bg-slate-100 hover:bg-blue-50 px-4 py-2 rounded-lg">
+          <Link
+            href="/"
+            className="group flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors bg-slate-100 hover:bg-blue-50 px-4 py-2 rounded-lg"
+          >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             Back to NeuroVault
           </Link>
@@ -123,16 +133,17 @@ export default function CaregiverPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
         {/* --- LEFT COLUMN: INPUTS (8 Cols) --- */}
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200/60 space-y-8">
-            
             {/* 1. AUTHOR */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Who are you?</label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                <User
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+                  size={20}
+                />
                 <input
                   type="text"
                   value={author}
@@ -145,7 +156,9 @@ export default function CaregiverPage() {
 
             {/* 2. PHOTO (DropZone) */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">2. Photo Evidence <span className="text-slate-300 font-normal normal-case">(Optional)</span></label>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                2. Photo Evidence <span className="text-slate-300 font-normal normal-case">(Optional)</span>
+              </label>
               <DropZone key={file ? "loaded" : "empty"} onFileSelect={setFile} />
             </div>
 
@@ -181,7 +194,7 @@ export default function CaregiverPage() {
               {status === "idle" && "Secure Upload Memory"}
               {status === "uploading" && (
                 <span className="flex items-center justify-center gap-3">
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Encrypting...
                 </span>
               )}
@@ -197,7 +210,6 @@ export default function CaregiverPage() {
         {/* --- RIGHT COLUMN: LOGS (4 Cols) --- */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-slate-900 rounded-3xl p-6 shadow-2xl flex flex-col h-[600px] border border-slate-800 sticky top-24">
-            
             <div className="flex items-center gap-3 pb-4 border-b border-slate-800 mb-4">
               <div className="p-2 bg-slate-800 rounded-lg">
                 <Terminal size={18} className="text-blue-400" />
@@ -216,13 +228,16 @@ export default function CaregiverPage() {
 
             <div className="flex-1 overflow-y-auto space-y-3 font-mono text-xs pr-2 custom-scrollbar">
               {logs.map((log) => (
-                <div key={log.id} className={`
-                  p-3 rounded-xl border-l-2 animate-in fade-in slide-in-from-left-2 duration-300 break-words
-                  ${log.type === "info" ? "bg-slate-800/50 border-blue-500 text-blue-200" : ""}
-                  ${log.type === "success" ? "bg-green-900/20 border-green-500 text-green-300" : ""}
-                  ${log.type === "warning" ? "bg-orange-900/20 border-orange-500 text-orange-200" : ""}
-                  ${log.type === "error" ? "bg-red-900/20 border-red-500 text-red-300" : ""}
-                `}>
+                <div
+                  key={log.id}
+                  className={`
+                    p-3 rounded-xl border-l-2 animate-in fade-in slide-in-from-left-2 duration-300 break-words
+                    ${log.type === "info" ? "bg-slate-800/50 border-blue-500 text-blue-200" : ""}
+                    ${log.type === "success" ? "bg-green-900/20 border-green-500 text-green-300" : ""}
+                    ${log.type === "warning" ? "bg-orange-900/20 border-orange-500 text-orange-200" : ""}
+                    ${log.type === "error" ? "bg-red-900/20 border-red-500 text-red-300" : ""}
+                  `}
+                >
                   <div className="opacity-40 text-[10px] mb-1">{log.ts}</div>
                   {log.message}
                 </div>
@@ -237,7 +252,6 @@ export default function CaregiverPage() {
             </div>
           </div>
         </div>
-
       </main>
     </div>
   );
