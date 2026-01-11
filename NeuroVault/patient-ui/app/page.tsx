@@ -7,6 +7,7 @@ import BigActionButton from "../components/neurovault/BigAction";
 import ResponseCard from "../components/neurovault/ResponseCard";
 import CaregiverFab from "@/components/neurovault/CaregiverFab";
 import CameraCapture, { VisionIdentifyResult } from "@/components/neurovault/CameraCapture";
+import Image from "next/image";
 
 export default function Page() {
   const [status, setStatus] = useState<"idle" | "listening" | "thinking">("idle");
@@ -143,29 +144,46 @@ export default function Page() {
         {/* --- MAIN CARD --- */}
         <div className="w-180 h-full shrink-0 bg-white rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden flex flex-col transition-all duration-500 z-20 relative">
           <header className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50 shrink-0">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-800">NeuroVault</h1>
-              <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">Personal Assistant</p>
-            </div>
-            <div className="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm flex items-center gap-2">
-              {status === "idle" && (
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              {/* Container for Logo + Text */}
+              <div className="flex items-center gap-4">
+                {/* Logo Container */}
+                <div className="relative w-12 h-12 shrink-0">
+                  <Image 
+                    src="/assets/logo.png" 
+                    alt="NeuroVault Logo" 
+                    fill
+                    priority
+                    className="object-contain"
+                  />
+                </div>
+                
+                {/* Text Container */}
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-800 leading-tight">NeuroVault</h1>
+                  <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">Personal Assistant</p>
+                </div>
+              </div>
+
+              {/* Status Indicator (Keep as is) */}
+              <div className="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm flex items-center gap-2">
+                {status === "idle" && (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                  </span>
+                )}
+                {status === "listening" && (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                )}
+                {status === "thinking" && <Sparkles size={14} className="text-blue-500 animate-spin" />}
+                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                  {status === "idle" ? "Online" : status === "listening" ? "Listening..." : "Processing..."}
                 </span>
-              )}
-              {status === "listening" && (
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                </span>
-              )}
-              {status === "thinking" && <Sparkles size={14} className="text-blue-500 animate-spin" />}
-              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                {status === "idle" ? "Online" : status === "listening" ? "Listening..." : "Processing..."}
-              </span>
-            </div>
-          </header>
+              </div>
+            </header>
 
           <div className="flex-1 bg-slate-50/30 p-6 flex flex-col items-center justify-center relative overflow-y-auto min-h-0">
             {/* Optional feedback card */}
