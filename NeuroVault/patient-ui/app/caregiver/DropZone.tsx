@@ -86,7 +86,7 @@ export function DropZone({ onFileSelect }: { onFileSelect: (f: File | null) => v
             </p>
             <p className="text-sm text-slate-500 mt-1">or drag and drop</p>
           </div>
-          <p className="text-xs text-slate-400 font-medium">PNG, JPG, WEBP (Max 5MB)</p>
+          <p className="text-xs text-slate-400 font-medium">PNG, JPG (Max 5MB)</p>
         </div>
       )}
     </div>

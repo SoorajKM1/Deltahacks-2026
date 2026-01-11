@@ -23,13 +23,6 @@ export default function NeuroVaultShell({
       <div className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 flex flex-col justify-center">
         {children}
       </div>
-
-      {/* Footer Branding */}
-      <footer className="py-6 text-center">
-        <p className="text-xs font-bold tracking-widest text-slate-300 uppercase">
-          NeuroVault System • v2.0
-        </p>
-      </footer>
     </main>
   );
 }
